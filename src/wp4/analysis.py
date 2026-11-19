@@ -2,10 +2,10 @@ import numpy as np
 
 # ----- Inputs -----
 
-fastener_pos = np.array([[0.0, -5.0], # x, z
-                            [-5.0, 5.0],
-                            [5.0, -5.0],
-                            [5.0, -5.0]])
+fastener_pos = np.array([[0, -5.0], # x, z
+                            [0, 7.0],
+                            [0, -7.0],
+                            [0, 5.0]])
 
 fastener_areas = np.array([10, 
                            10, 
@@ -79,20 +79,18 @@ def calc_bearing_stress(F_f):
 
 
 # PULL THROUGH
-# Find normal forces
-   
     
 # Find forces on fasteners from net forces and moment
-def calc_out_plane_forces(M_z,x_cg, z_cg):
+def calc_out_plane_forces(M_z,x_cg):
     F_fy = F_y / n_f # incorrect with different fastener areas
-    cg = np.array(x_cg, z_cg)
-    pos = fastener_pos - cg
+    pos = fastener_pos[0,:] - x_cg
+    print("oooo" , pos)
     r = np.linalg.norm(pos, axis=1)
     F_M_z = M_z * ((fastener_areas * r) / np.sum(fastener_areas * np.square(r)))
     
     
     F_f_tot = F_fy + F_M_z
-    print("+++++555" , F_M_z, F_fy)
+    print("+++++" , F_M_z, F_fy)
     return F_f_tot
     
 
@@ -102,5 +100,5 @@ x_cg, z_cg = calc_cg()
 M_y = calc_M_y(x_cg=x_cg, z_cg=z_cg)
 F_f = calc_in_plane_forces(M_y, x_cg, z_cg)
 s_f = calc_bearing_stress(F_f)
-d_f = calc_out_plane_forces(M_z, x_cg , z_cg)
+d_f = calc_out_plane_forces(M_z, x_cg)
 print('bearing stresses:\n', s_f)
