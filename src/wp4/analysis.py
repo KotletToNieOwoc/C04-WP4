@@ -74,7 +74,6 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
     F_M_magnitude = M_y * ((fastener_areas * moment_arm) / np.sum(fastener_areas * np.square(moment_arm)))
     F_M_unit_vector = np.flip(pos / moment_arm[:, np.newaxis], 1)
     F_M_unit_vector[:, 1] *= -1
-    #print('force from moment direction:\n', F_M_y_dir)
 
     # Combine magnitude and direction of the force vector
     F_M = F_M_magnitude[:, np.newaxis] * F_M_unit_vector
@@ -84,7 +83,7 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
     F_f_tot[:,0] += F_fx
     F_f_tot[:,1] += F_fz
 
-    #print('total force on fastener:\n', F_f_tot)
+    print('total force on fasteners:\n', F_f_tot)
     return F_f_tot
 
 
