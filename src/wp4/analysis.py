@@ -88,8 +88,8 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
 
 
 # 4.7 - Calculate bearing stress
-def calc_bearing_stress(F_f):
-    return np.linalg.norm(F_f, axis=1) / (D_2 * t_2)
+def calc_bearing_stress(F_f, D, t):
+    return np.linalg.norm(F_f, axis=1) / (D * t)
 
 
 
@@ -104,16 +104,13 @@ def calc_out_plane_forces(M_z,x_cg):
 
 
 # 4.9 - Calculate shear stress due to pull forces
-def calc_pull_through_stress(F_pull_f):
+def calc_pull_through_stress(F_pull_f, D, t):
     #A_contact = (math.pi / 4) * ( (D_fo ** 2) - (D_fi ** 2) )
     #normal_stress = F_f / contact_area
-    A_shear_backup = math.pi * D_fi * t_2
-    shear_stress_backup = F_pull_f / A_shear_backup
+    A_shear = math.pi * D * t
+    shear_stress = F_pull_f / A_shear
 
-    A_shear_vehicle = math.pi * D_fi * t_3
-    shear_stress_vehicle = F_pull_f / A_shear_vehicle
-
-    return shear_stress_backup, shear_stress_vehicle
+    return shear_stress
 
 
 
@@ -123,12 +120,15 @@ print("\n")
 x_cg, z_cg = calc_cg()
 M_y = calc_M_y(x_cg=x_cg, z_cg=z_cg)
 F_plane_f = calc_in_plane_forces(M_y, x_cg, z_cg)
-s_bear = calc_bearing_stress(F_plane_f)
+s_bear_backup = calc_bearing_stress(F_plane_f, D_2, t_2)
+s_bear_vehicle = calc_bearing_stress(F_plane_f, D_2, t_3)
 F_pull_f = calc_out_plane_forces(M_z, x_cg)
-s_shear_backup, s_shear_vehicle = calc_pull_through_stress(F_pull_f)
+s_shear_backup = calc_pull_through_stress(F_pull_f, D_fi, t_2)
+s_shear_vehicle = calc_pull_through_stress(F_pull_f, D_fi, t_3)
 
 print('----------------------- Analysis results -----------------------')
-print('Bearing stresses:\n', s_bear)
+print('Bearing stresses (on backup wall):\n', s_bear_backup)
 print('Pull through shear stresses (on backup wall):\n', s_shear_backup)
+print('Bearing stresses (on backup wall):\n', s_bear_vehicle)
 print('Pull through shear stresses (on vehicle wall):\n', s_shear_vehicle)
 print('----------------------------------------------------------------')
