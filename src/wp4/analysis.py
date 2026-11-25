@@ -109,7 +109,7 @@ def calc_out_plane_forces(M_z,x_cg):
     F_tension = np.where(in_tension, F_f_tot, 0.0)
 
     for i, F in enumerate(F_f_tot):
-        print(f"Fastener {i}: F_y = {F:.2f} N, {"tension" if in_tension[i] else "compression (no pull-through)"}")
+        print(f'Fastener {i}: F_y = {F:.2f} N, {'tension' if in_tension[i] else 'compression (no pull-through)'}')
 
     return F_tension
 
@@ -149,7 +149,7 @@ s_shear_vehicle, s_normal_vehicle = calc_pull_through_stress(F_pull_f, D_fi, D_f
 print('----------------------- Analysis results -----------------------')
 print('Bearing stresses (on backup wall):\n', s_bear_backup)
 print('Pull through shear stresses (on backup wall):\n', s_shear_backup)
-print('Von Mises: ', check_von_mises(s_shear_vehicle, s_normal_vehicle, yield_stress_backup))
+print('Von Mises: ', check_von_mises(s_shear_backup, s_normal_backup, yield_stress_backup))
 print('Bearing stresses (on backup wall):\n', s_bear_vehicle)
 print('Pull through shear stresses (on vehicle wall):\n', s_shear_vehicle)
 print('Von Mises: ', check_von_mises(s_shear_vehicle, s_normal_vehicle, yield_stress_wall))
