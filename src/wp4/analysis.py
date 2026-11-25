@@ -38,6 +38,10 @@ t_3 = 0.3
 # Number of fasteners (calculated automatically)
 n_f = len(fastener_areas)
 
+# Yield stress of backup plate
+yield_stress_backup = 100
+# Yield stress of sc wall
+yield_stress_wall = 100
 
 
 # ----- Analysis calculation functions -----
@@ -102,7 +106,7 @@ def calc_out_plane_forces(M_z,x_cg):
     F_f_tot = F_fy + F_M_z
 
     in_tension = F_f_tot > 0
-    F_tension = np.where(in_tension, F_f_tot, 0.0)   # compression -> carried by plate contact
+    F_tension = np.where(in_tension, F_f_tot, 0.0)
 
     for i, F in enumerate(F_f_tot):
         print(f"Fastener {i}: F_y = {F:.2f} N, {"tension" if in_tension[i] else "compression (no pull-through)"}")
@@ -111,19 +115,21 @@ def calc_out_plane_forces(M_z,x_cg):
 
 
 # 4.9 - Calculate shear stress due to pull forces
-def calc_pull_through_stress(F_pull_f, D, t):
+def calc_pull_through_stress(F_pull_f, D_fi, D_fo, t):
     #A_contact = (math.pi / 4) * ( (D_fo ** 2) - (D_fi ** 2) )
     #normal_stress = F_f / contact_area
-    A_shear = math.pi * D * t
-    shear_stress = F_pull_f / A_shear
+    A_shear = math.pi * D_fi * t
+    A_contact = (math.pi / 4) * (D_fo**2 - D_fi**2)
+    tau = F_pull_f / A_shear
+    sigma = F_pull_f / A_contact
 
-    return shear_stress
+    return tau, sigma
 
 
 # 4.9 - Von Mises criterion check
-def check_von_mises():
-    #Y = np.sqrt(0.5 * (()))
-    pass
+def check_von_mises(tau, sigma, sigma_yield):
+    Y = np.sqrt(np.square(sigma) + 3 * (tau**2))
+    return Y, Y <= sigma_yield
 
 
 
@@ -137,12 +143,14 @@ F_plane_f = calc_in_plane_forces(M_y, x_cg, z_cg)
 s_bear_backup = calc_bearing_stress(F_plane_f, D_2, t_2)
 s_bear_vehicle = calc_bearing_stress(F_plane_f, D_2, t_3)
 F_pull_f = calc_out_plane_forces(M_z, x_cg)
-s_shear_backup = calc_pull_through_stress(F_pull_f, D_fi, t_2)
-s_shear_vehicle = calc_pull_through_stress(F_pull_f, D_fi, t_3)
+s_shear_backup, s_normal_backup = calc_pull_through_stress(F_pull_f, D_fi, D_fo, t_2)
+s_shear_vehicle, s_normal_vehicle = calc_pull_through_stress(F_pull_f, D_fi, D_fo, t_3)
 
 print('----------------------- Analysis results -----------------------')
 print('Bearing stresses (on backup wall):\n', s_bear_backup)
 print('Pull through shear stresses (on backup wall):\n', s_shear_backup)
+print('Von Mises: ', check_von_mises(s_shear_vehicle, s_normal_vehicle, yield_stress_backup))
 print('Bearing stresses (on backup wall):\n', s_bear_vehicle)
 print('Pull through shear stresses (on vehicle wall):\n', s_shear_vehicle)
+print('Von Mises: ', check_von_mises(s_shear_vehicle, s_normal_vehicle, yield_stress_wall))
 print('----------------------------------------------------------------')
