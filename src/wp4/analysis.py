@@ -4,16 +4,20 @@ import math
 # ----- Inputs -----
 
 # Position of each fastener with respect to origin at centroid of backup plate [m]
-fastener_pos = np.array([[1, -5.0], # x, z
-                            [1, 7.0],
-                            [-1, -7.0],
-                            [-1, 5.0]])
+fastener_pos = np.array([
+    [1, -5.0], # x, z
+    [1, 7.0],
+    [-1, -7.0],
+    [-1, 5.0]
+])
 
 # Area of each fastener [m^2]
-fastener_areas = np.array([10, 
-                           10, 
-                           10,
-                           10])
+fastener_areas = np.array([
+    10, 
+    10, 
+    10,
+    10
+])
 
 # Applied forces [N]
 F_x = 10
@@ -38,6 +42,14 @@ t_3 = 0.3
 # Number of fasteners (calculated automatically)
 n_f = len(fastener_areas)
 
+# Bearing strength of backup plate
+bearing_strength_backup = 100
+# Yield stress of backup plate
+yield_stress_backup = 100
+# Bearing strength of backup vechicle
+bearing_strength_vehicle = 100
+# Yield stress of sc wall
+yield_stress_wall = 100
 
 
 # ----- Analysis calculation functions -----
@@ -55,7 +67,7 @@ def calc_cg():
 
 # 4.6 - Calculate resultant moment when force vector on backup plate centroid is moved to fastener cg
 def calc_M_y(x_cg, z_cg):
-    M_y = (F_x * z_cg) + (F_z * x_cg)
+    M_y = -(F_x * z_cg) + (F_z * x_cg)
 
     print("M_y is ", M_y, "Nm")
     return M_y
@@ -68,7 +80,7 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
     F_fz = F_z / n_f
 
     # Force from moment M_y
-    cg_pos = np.array(x_cg, z_cg)
+    cg_pos = np.array([x_cg, z_cg])
     pos = fastener_pos - cg_pos
     moment_arm = np.linalg.norm(pos, axis=1)
     F_M_magnitude = M_y * ((fastener_areas * moment_arm) / np.sum(fastener_areas * np.square(moment_arm)))
@@ -83,13 +95,21 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
     F_f_tot[:,0] += F_fx
     F_f_tot[:,1] += F_fz
 
-    print('total force on fasteners:\n', F_f_tot)
+    for i, F in enumerate(F_f_tot):
+            print(f'Fastener {i}: F_in_plane = {np.linalg.norm(F_f_tot[i]):.2f} N')
+    print('\n')
+    
     return F_f_tot
 
 
 # 4.7 - Calculate bearing stress
-def calc_bearing_stress(F_f):
-    return np.linalg.norm(F_f, axis=1) / (D_2 * t_2)
+def calc_bearing_stress(F_f, D, t):
+    return np.linalg.norm(F_f, axis=1) / (D * t)
+
+
+# 4.7 - Bearing strength check
+def check_bearing(s_bear, bearing_strength):
+    return s_bear <= bearing_strength
 
 
 
@@ -100,20 +120,33 @@ def calc_out_plane_forces(M_z,x_cg):
     x_delta_pos = fastener_pos[:,0] - x_cg
     F_M_z = ((M_z * fastener_areas * x_delta_pos) / np.sum(fastener_areas * np.square(x_delta_pos)))
     F_f_tot = F_fy + F_M_z
-    return F_f_tot
+
+    in_tension = F_f_tot > 0
+    F_tension = np.where(in_tension, F_f_tot, 0.0)
+
+    for i, F in enumerate(F_f_tot):
+        print(f'Fastener {i}: F_y = {F:.2f} N, {'tension' if in_tension[i] else 'compression (no pull-through)'}')
+
+    return F_tension
 
 
 # 4.9 - Calculate shear stress due to pull forces
-def calc_pull_through_stress(F_pull_f):
+def calc_pull_through_stress(F_pull_f, D_fi, D_fo, t):
     #A_contact = (math.pi / 4) * ( (D_fo ** 2) - (D_fi ** 2) )
     #normal_stress = F_f / contact_area
-    A_shear_backup = math.pi * D_fi * t_2
-    shear_stress_backup = F_pull_f / A_shear_backup
+    A_shear = math.pi * D_fi * t
+    A_contact = (math.pi / 4) * (D_fo**2 - D_fi**2)
+    tau = F_pull_f / A_shear
+    sigma = F_pull_f / A_contact
 
-    A_shear_vehicle = math.pi * D_fi * t_3
-    shear_stress_vehicle = F_pull_f / A_shear_vehicle
+    return tau, sigma
 
-    return shear_stress_backup, shear_stress_vehicle
+
+# 4.9 - Von Mises criterion check
+def check_von_mises(tau, sigma, sigma_yield):
+    Y = np.sqrt(np.square(sigma) + 3 * (tau**2))
+    return Y, Y <= sigma_yield
+
 
 
 
@@ -123,12 +156,20 @@ print("\n")
 x_cg, z_cg = calc_cg()
 M_y = calc_M_y(x_cg=x_cg, z_cg=z_cg)
 F_plane_f = calc_in_plane_forces(M_y, x_cg, z_cg)
-s_bear = calc_bearing_stress(F_plane_f)
+s_bear_backup = calc_bearing_stress(F_plane_f, D_2, t_2)
+s_bear_vehicle = calc_bearing_stress(F_plane_f, D_2, t_3)
 F_pull_f = calc_out_plane_forces(M_z, x_cg)
-s_shear_backup, s_shear_vehicle = calc_pull_through_stress(F_pull_f)
+s_shear_backup, s_normal_backup = calc_pull_through_stress(F_pull_f, D_fi, D_fo, t_2)
+s_shear_vehicle, s_normal_vehicle = calc_pull_through_stress(F_pull_f, D_fi, D_fo, t_3)
 
-print('----------------------- Analysis results -----------------------')
-print('Bearing stresses:\n', s_bear)
+print('\n----------------------- Analysis results -----------------------\n')
+print('Bearing stresses (on backup wall):\n', s_bear_backup)
+print('Bearing strength check: ', check_bearing(s_bear_backup, bearing_strength_backup))
 print('Pull through shear stresses (on backup wall):\n', s_shear_backup)
+print('Von Mises: ', check_von_mises(s_shear_backup, s_normal_backup, yield_stress_backup))
+print('\n')
+print('Bearing stresses (on vehicle wall):\n', s_bear_vehicle)
+print('Bearing strength check: ', check_bearing(s_bear_vehicle, bearing_strength_vehicle))
 print('Pull through shear stresses (on vehicle wall):\n', s_shear_vehicle)
-print('----------------------------------------------------------------')
+print('Von Mises: ', check_von_mises(s_shear_vehicle, s_normal_vehicle, yield_stress_wall))
+print('\n----------------------------------------------------------------')
