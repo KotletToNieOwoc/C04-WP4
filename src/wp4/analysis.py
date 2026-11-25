@@ -4,16 +4,20 @@ import math
 # ----- Inputs -----
 
 # Position of each fastener with respect to origin at centroid of backup plate [m]
-fastener_pos = np.array([[1, -5.0], # x, z
-                            [1, 7.0],
-                            [-1, -7.0],
-                            [-1, 5.0]])
+fastener_pos = np.array([
+    [1, -5.0], # x, z
+    [1, 7.0],
+    [-1, -7.0],
+    [-1, 5.0]
+])
 
 # Area of each fastener [m^2]
-fastener_areas = np.array([10, 
-                           10, 
-                           10,
-                           10])
+fastener_areas = np.array([
+    10, 
+    10, 
+    10,
+    10
+])
 
 # Applied forces [N]
 F_x = 10
