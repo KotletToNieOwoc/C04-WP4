@@ -100,7 +100,14 @@ def calc_out_plane_forces(M_z,x_cg):
     x_delta_pos = fastener_pos[:,0] - x_cg
     F_M_z = ((M_z * fastener_areas * x_delta_pos) / np.sum(fastener_areas * np.square(x_delta_pos)))
     F_f_tot = F_fy + F_M_z
-    return F_f_tot
+
+    in_tension = F_f_tot > 0
+    F_tension = np.where(in_tension, F_f_tot, 0.0)   # compression -> carried by plate contact
+
+    for i, F in enumerate(F_f_tot):
+        print(f"Fastener {i}: F_y = {F:.2f} N, {"tension" if in_tension[i] else "compression (no pull-through)"}")
+
+    return F_tension
 
 
 # 4.9 - Calculate shear stress due to pull forces
@@ -111,6 +118,13 @@ def calc_pull_through_stress(F_pull_f, D, t):
     shear_stress = F_pull_f / A_shear
 
     return shear_stress
+
+
+# 4.9 - Von Mises criterion check
+def check_von_mises():
+    #Y = np.sqrt(0.5 * (()))
+    pass
+
 
 
 
