@@ -4,29 +4,25 @@ import math
 # ----- Inputs -----
 
 # Position of each fastener with respect to origin at centroid of backup plate [m]
-fastener_pos = np.array([
-    [1, -5.0], # x, z
-    [1, 7.0],
-    [-1, -7.0],
-    [-1, 5.0]
-])
+fastener_pos = np.array([[-0.02171425, 0.00428575], # x, z
+                            [-0.02171425, -0.00428575],
+                            [0.02171425, 0.00428575],
+                            [0.02171425, -0.00428575]])
 
 # Area of each fastener [m^2]
-fastener_areas = np.array([
-    10, 
-    10, 
-    10,
-    10
-])
+fastener_areas = np.array([1,44256E-05, 
+                           1,44256E-05, 
+                           1,44256E-05,
+                           1,44256E-05])
 
 # Applied forces [N]
-F_x = 10
-F_z = 10
-F_y = 10
-M_z = 10
+F_x = 5.594 * 10 ^(-3)
+F_y = 7.271 * 10 ^(-3)
+F_z = -1.9934
+M_z = -6.153 * 10 ^(-3)
 
 # Backup plate fastener hole diameter [m]
-D_2 = 1
+D_2 = 0.0042857
 
 # Backup plate thickness [m]
 t_2 = 0.5
@@ -41,7 +37,6 @@ t_3 = 0.3
 
 # Number of fasteners (calculated automatically)
 n_f = len(fastener_areas)
-
 # Bearing strength of backup plate
 bearing_strength_backup = 100
 # Yield stress of backup plate
