@@ -38,8 +38,12 @@ t_3 = 0.3
 # Number of fasteners (calculated automatically)
 n_f = len(fastener_areas)
 
+# Bearing strength of backup plate
+bearing_strength_backup = 100
 # Yield stress of backup plate
 yield_stress_backup = 100
+# Bearing strength of backup vechicle
+bearing_strength_vehicle = 100
 # Yield stress of sc wall
 yield_stress_wall = 100
 
@@ -87,13 +91,21 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
     F_f_tot[:,0] += F_fx
     F_f_tot[:,1] += F_fz
 
-    print('total force on fasteners:\n', F_f_tot)
+    for i, F in enumerate(F_f_tot):
+            print(f'Fastener {i}: F_z = {np.linalg.norm(F_f_tot[i]):.2f} N')
+    print('\n')
+    
     return F_f_tot
 
 
 # 4.7 - Calculate bearing stress
 def calc_bearing_stress(F_f, D, t):
     return np.linalg.norm(F_f, axis=1) / (D * t)
+
+
+# 4.7 - Bearing strength check
+def check_bearing(s_bear, bearing_strength):
+    return s_bear < bearing_strength
 
 
 
@@ -146,11 +158,14 @@ F_pull_f = calc_out_plane_forces(M_z, x_cg)
 s_shear_backup, s_normal_backup = calc_pull_through_stress(F_pull_f, D_fi, D_fo, t_2)
 s_shear_vehicle, s_normal_vehicle = calc_pull_through_stress(F_pull_f, D_fi, D_fo, t_3)
 
-print('----------------------- Analysis results -----------------------')
+print('\n----------------------- Analysis results -----------------------\n')
 print('Bearing stresses (on backup wall):\n', s_bear_backup)
+print('Bearing strength check: ', check_bearing(s_bear_backup, bearing_strength_backup))
 print('Pull through shear stresses (on backup wall):\n', s_shear_backup)
 print('Von Mises: ', check_von_mises(s_shear_backup, s_normal_backup, yield_stress_backup))
-print('Bearing stresses (on backup wall):\n', s_bear_vehicle)
+print('\n')
+print('Bearing stresses (on vehicle wall):\n', s_bear_vehicle)
+print('Bearing strength check: ', check_bearing(s_bear_vehicle, bearing_strength_vehicle))
 print('Pull through shear stresses (on vehicle wall):\n', s_shear_vehicle)
 print('Von Mises: ', check_von_mises(s_shear_vehicle, s_normal_vehicle, yield_stress_wall))
-print('----------------------------------------------------------------')
+print('\n----------------------------------------------------------------')
