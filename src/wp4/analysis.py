@@ -92,7 +92,7 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
     F_f_tot[:,1] += F_fz
 
     for i, F in enumerate(F_f_tot):
-            print(f'Fastener {i}: F_z = {np.linalg.norm(F_f_tot[i]):.2f} N')
+            print(f'Fastener {i}: F_in_plane = {np.linalg.norm(F_f_tot[i]):.2f} N')
     print('\n')
     
     return F_f_tot
@@ -105,7 +105,7 @@ def calc_bearing_stress(F_f, D, t):
 
 # 4.7 - Bearing strength check
 def check_bearing(s_bear, bearing_strength):
-    return s_bear < bearing_strength
+    return s_bear <= bearing_strength
 
 
 
