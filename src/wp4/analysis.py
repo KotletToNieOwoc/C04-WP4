@@ -55,7 +55,7 @@ def calc_cg():
 
 # 4.6 - Calculate resultant moment when force vector on backup plate centroid is moved to fastener cg
 def calc_M_y(x_cg, z_cg):
-    M_y = (F_x * z_cg) + (F_z * x_cg)
+    M_y = -(F_x * z_cg) + (F_z * x_cg)
 
     print("M_y is ", M_y, "Nm")
     return M_y
@@ -68,7 +68,7 @@ def calc_in_plane_forces(M_y, x_cg, z_cg):
     F_fz = F_z / n_f
 
     # Force from moment M_y
-    cg_pos = np.array(x_cg, z_cg)
+    cg_pos = np.array([x_cg, z_cg])
     pos = fastener_pos - cg_pos
     moment_arm = np.linalg.norm(pos, axis=1)
     F_M_magnitude = M_y * ((fastener_areas * moment_arm) / np.sum(fastener_areas * np.square(moment_arm)))
